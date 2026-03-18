@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Fitness Plan 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --grass: #1a472a;
+    --grass-light: #2d6a4f;
+    --pitch: #0d2818;
+    --lime: #b5e853;
+    --amber: #f5a623;
+    --red: #e84040;
+    --white: #f0f4f0;
+    --grey: #8a9e8a;
+    --card-bg: #122219;
+    --border: rgba(181,232,83,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--pitch);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Pitch lines background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 59px,
+        rgba(255,255,255,0.015) 59px,
+        rgba(255,255,255,0.015) 60px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 59px,
+        rgba(255,255,255,0.015) 59px,
+        rgba(255,255,255,0.015) 60px
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 50px 0 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .title-block h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 10vw, 90px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+
+  .title-block h1 span {
+    color: var(--lime);
+    display: block;
+  }
+
+  .title-block .subtitle {
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 10px;
+    font-weight: 300;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    min-width: 200px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .stat-card .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--lime);
+    line-height: 1;
+  }
+
+  .stat-card .lbl {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 4px;
+  }
+
+  .phase-bar {
+    display: flex;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 30px;
+    height: 8px;
+  }
+
+  .phase-bar div {
+    height: 100%;
+    transition: opacity 0.2s;
+  }
+
+  .phase-bar div:hover { opacity: 0.8; }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+
+  .tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--grey);
+    transition: all 0.2s;
+  }
+
+  .tab:hover { color: var(--white); border-color: rgba(181,232,83,0.4); }
+
+  .tab.active {
+    background: var(--lime);
+    color: var(--pitch);
+    border-color: var(--lime);
+    font-weight: 700;
+  }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* PHASE CARDS */
+  .phase {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .phase-header:hover { background: rgba(181,232,83,0.04); }
+
+  .phase-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    color: var(--lime);
+    line-height: 1;
+    min-width: 40px;
+    opacity: 0.4;
+  }
+
+  .phase-info h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--white);
+  }
+
+  .phase-info .meta {
+    font-size: 12px;
+    color: var(--grey);
+    letter-spacing: 1px;
+  }
+
+  .phase-badge {
+    margin-left: auto;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .phase-toggle {
+    font-size: 20px;
+    color: var(--grey);
+    transition: transform 0.3s;
+    margin-left: 8px;
+  }
+
+  .phase.open .phase-toggle { transform: rotate(180deg); }
+
+  .phase-body {
+    display: none;
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .phase.open .phase-body { display: block; }
+
+  /* WEEKLY SCHEDULE */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .day-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .day-card.rest { opacity: 0.55; }
+
+  .day-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--lime);
+    margin-bottom: 6px;
+  }
+
+  .day-type {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 8px;
+  }
+
+  .day-detail {
+    font-size: 13px;
+    color: var(--white);
+    line-height: 1.5;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  .tag-cardio { background: rgba(181,232,83,0.15); color: var(--lime); }
+  .tag-strength { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .tag-football { background: rgba(232,64,64,0.15); color: var(--red); }
+  .tag-hike { background: rgba(45,106,79,0.5); color: #7ecba1; }
+  .tag-rest { background: rgba(138,158,138,0.1); color: var(--grey); }
+  .tag-mobility { background: rgba(150,100,220,0.15); color: #c4a0ff; }
+
+  /* WORKOUT BLOCKS */
+  .workout-block {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border-left: 3px solid var(--lime);
+  }
+
+  .workout-block.amber { border-left-color: var(--amber); }
+  .workout-block.red { border-left-color: var(--red); }
+  .workout-block.purple { border-left-color: #c4a0ff; }
+
+  .workout-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    color: var(--white);
+  }
+
+  .workout-block ul {
+    padding-left: 16px;
+    font-size: 13px;
+    color: rgba(240,244,240,0.8);
+  }
+
+  .workout-block ul li { margin-bottom: 4px; }
+
+  /* NUTRITION */
+  .macro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .macro-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .macro-card .macro-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .macro-card .macro-unit {
+    font-size: 13px;
+    color: var(--grey);
+  }
+
+  .macro-card .macro-lbl {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 6px;
+  }
+
+  /* MEAL PLAN */
+  .meal {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .meal:last-child { border-bottom: none; }
+
+  .meal-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--lime);
+  }
+
+  .meal-name {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  .meal-desc {
+    font-size: 12px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  .meal-cals {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--amber);
+    white-space: nowrap;
+  }
+
+  /* RULES / TIPS */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  .rule {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .rule-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .rule-text strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .rule-text span {
+    font-size: 12px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  /* WEIGHT TRACKER */
+  .tracker-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 100px;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .tracker-row.header {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--grey);
+    border-bottom: 1px solid rgba(181,232,83,0.3);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+
+  .milestone { color: var(--lime); font-weight: 500; }
+  .milestone-note { font-size: 11px; color: var(--grey); }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--grass-light), var(--lime));
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    margin-bottom: 24px;
+  }
+
+  .section-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+
+  .section-header p {
+    color: var(--grey);
+    font-size: 13px;
+    margin-top: 6px;
+    max-width: 600px;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ALERT BOX */
+  .alert {
+    background: rgba(245,166,35,0.08);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: rgba(245,200,120,0.9);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .alert strong { color: var(--amber); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--pitch); }
+  ::-webkit-scrollbar-thumb { background: var(--grass); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .header-top { flex-direction: column; }
+    .meal { grid-template-columns: 80px 1fr; }
+    .meal-cals { display: none; }
+    .tracker-row { grid-template-columns: 1fr 70px 90px; }
+    .tracker-row .tracker-note { display: none; }
+  }
+</style>
+<style>
+  .rpg-back-nav {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: rgba(13, 40, 24, 0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(181,232,83,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+  }
+  .rpg-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #b5e853;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .rpg-back-btn:hover { opacity: 0.75; }
+  .rpg-back-title {
+    font-size: 13px;
+    color: rgba(181,232,83,0.5);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<div class="rpg-back-nav">
+  <a class="rpg-back-btn" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to RPG
+  </a>
+  <span class="rpg-back-title">❤️ Health Dashboard</span>
+</div>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="title-block">
+        <div class="subtitle">Personal Training & Nutrition Plan</div>
+        <h1>Get Back<span>To Fit</span></h1>
+        <div class="subtitle" style="margin-top:14px;">20 March → 1 September 2026 &nbsp;·&nbsp; 24 Weeks</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="val">102</div>
+          <div class="lbl">Start kg</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--amber)">87</div>
+          <div class="lbl">Target kg</div>
+        </div>
+        <div class="stat-card">
+          <div class="val">15</div>
+          <div class="lbl">kg to lose</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--red)">24</div>
+          <div class="lbl">Weeks</div>
+        </div>
+      </div>
+    </div>
+    <div class="phase-bar" style="margin-top:24px;">
+      <div style="width:21%;background:#2d6a4f;" title="Phase 1: Foundation"></div>
+      <div style="width:21%;background:#3a8c5a;" title="Phase 2: Build"></div>
+      <div style="width:25%;background:#5aad6a;" title="Phase 3: Conditioning"></div>
+      <div style="width:17%;background:#92cc6a;" title="Phase 4: Peak"></div>
+      <div style="width:16%;background:var(--lime);" title="Phase 5: Pre-Season"></div>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:#2d6a4f;">████ P1 Foundation (Wks 1–5)</span>
+      <span style="font-size:11px;color:#3a8c5a;">████ P2 Build (Wks 6–10)</span>
+      <span style="font-size:11px;color:#5aad6a;">████ P3 Conditioning (Wks 11–16)</span>
+      <span style="font-size:11px;color:#92cc6a;">████ P4 Peak (Wks 17–20)</span>
+      <span style="font-size:11px;color:var(--lime);">████ P5 Pre-Season (Wks 21–24)</span>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview')">Overview</button>
+    <button class="tab" onclick="showTab('phases')">Training Phases</button>
+    <button class="tab" onclick="showTab('weekly')">Weekly Schedule</button>
+    <button class="tab" onclick="showTab('nutrition')">Nutrition Plan</button>
+    <button class="tab" onclick="showTab('milestones')">Milestones</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="overview" class="section active">
+    <div class="section-header">
+      <h2>Your Plan at a Glance</h2>
+      <p>Designed around your football schedule, hamstring recovery, and available time slots. No burnout, no boredom — progressive overload that builds real match fitness.</p>
+    </div>
+
+    <div class="alert">
+      <strong>⚠️ Hamstring Note:</strong> Given your recent injury, all running in Phase 1 is low-impact. No sprinting until Phase 3. Prioritise the hamstring activation and mobility work every session for the first 8 weeks. If any pain returns, drop back a phase immediately.
+    </div>
+
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-icon">🎯</div>
+        <div class="rule-text">
+          <strong>The Goal</strong>
+          <span>Lose ~15kg of fat, rebuild aerobic base and football-specific fitness for September. Target: 87kg and match-ready.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">📅</div>
+        <div class="rule-text">
+          <strong>Structure</strong>
+          <span>5 phases of ~5 weeks. Each phase increases intensity and football specificity. Thursday = football training (protected).</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🏃</div>
+        <div class="rule-text">
+          <strong>Cardio Approach</strong>
+          <span>Start with walking + low-intensity cycling/rowing. Progress to run-walk intervals, then sustained running by Phase 3.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">💪</div>
+        <div class="rule-text">
+          <strong>Strength Work</strong>
+          <span>Home/bodyweight-first with gym as an option. Compound movements only — no machine isolation work unless you want it.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🥾</div>
+        <div class="rule-text">
+          <strong>Weekend Hiking</strong>
+          <span>Counts as active recovery and aerobic base work. Aim for 1 hike per week when possible — 6–14km depending on phase.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍽️</div>
+        <div class="rule-text">
+          <strong>Nutrition</strong>
+          <span>Moderate calorie deficit (~500 kcal/day). High protein to preserve muscle. No crash dieting. Real food, sustainable habits.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">📉</div>
+        <div class="rule-text">
+          <strong>Weight Loss Rate</strong>
+          <span>Target 0.5–0.75kg/week. Realistic, healthy, and sustainable over 24 weeks. Allows muscle building alongside fat loss.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">😴</div>
+        <div class="rule-text">
+          <strong>Recovery</strong>
+          <span>Sleep 7–9hrs. Two full rest days per week. Active recovery walks count. Don't skip rest — it's when adaptation happens.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Weekly Time Commitment</h2>
+      <p>Designed to fit your schedule. Everything is capped at 60 mins on weeknights.</p>
+    </div>
+
+    <div class="week-grid">
+      <div class="day-card">
+        <div class="day-name">Monday</div>
+        <div class="day-type">Lunch or Evening</div>
+        <div class="day-detail">Strength / Bodyweight circuit + mobility. 45–60 mins.</div>
+        <span class="tag tag-strength">Strength</span>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Tuesday</div>
+        <div class="day-type">Lunch or Evening</div>
+        <div class="day-detail">Cardio session — cycling, rowing, run-walk, or pool. 45–60 mins.</div>
+        <span class="tag tag-cardio">Cardio</span>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Wednesday</div>
+        <div class="day-type">Evening</div>
+        <div class="day-detail">Mobility + light activation. 30–45 mins. Pre-football prep day.</div>
+        <span class="tag tag-mobility">Mobility</span>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Thursday</div>
+        <div class="day-type">Evening — Protected</div>
+        <div class="day-detail">Football training. This IS your session. No additional training.</div>
+        <span class="tag tag-football">Football</span>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Friday</div>
+        <div class="day-type">Evening</div>
+        <div class="day-detail">Cardio or full-body circuit. 45–60 mins. Start of the plan.</div>
+        <span class="tag tag-cardio">Cardio</span>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Saturday</div>
+        <div class="day-type">Flexible</div>
+        <div class="day-detail">Hike (6–14km depending on phase), 5-a-side, or longer cardio.</div>
+        <span class="tag tag-hike">Active</span>
+      </div>
+      <div class="day-card rest">
+        <div class="day-name">Sunday</div>
+        <div class="day-type">Rest / Active Recovery</div>
+        <div class="day-detail">Full rest or gentle 20–30 min walk. Meal prep day.</div>
+        <span class="tag tag-rest">Rest</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASES -->
+  <div id="phases" class="section">
+    <div class="section-header">
+      <h2>The 5 Phases</h2>
+      <p>Each phase builds on the last. Tap each phase to expand the full details.</p>
+    </div>
+
+    <!-- PHASE 1 -->
+    <div class="phase open" id="p1">
+      <div class="phase-header" onclick="togglePhase('p1')">
+        <div class="phase-num">01</div>
+        <div class="phase-info">
+          <h3>Foundation — Wake Up the Engine</h3>
+          <div class="meta">Weeks 1–5 &nbsp;·&nbsp; 20 Mar – 24 Apr &nbsp;·&nbsp; Target: –3.5kg → 98.5kg</div>
+        </div>
+        <span class="phase-badge" style="background:rgba(45,106,79,0.3);color:#7ecba1;">Low Intensity</span>
+        <span class="phase-toggle">▼</span>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--grey);font-size:13px;margin-bottom:16px;">Your body has been largely inactive. The goal here is NOT to smash yourself. It's to move consistently, build the habit, protect the hamstring, and begin burning calories steadily. Every session should feel like a 5–6/10 effort.</p>
+
+        <div class="workout-block">
+          <div class="workout-title">Mon – Full Body Bodyweight Circuit (45 mins)</div>
+          <ul>
+            <li>Warm-up: 5 min brisk walk + leg swings, hip circles, arm circles</li>
+            <li>3 rounds: 12x Goblet squat (or bodyweight squat), 10x Push-up, 10x Dumbbell Romanian Deadlift (light, hamstring-safe), 15x Glute bridge, 12x Dumbbell row or band row</li>
+            <li>Core: 3x 20s plank, 15x Dead bug, 10x Bird dog each side</li>
+            <li>Cool-down: 5 min stretching — hip flexor, quad, calf, thoracic rotation</li>
+            <li><strong>No heavy loading. Focus on form and moving well.</strong></li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Tue – Low-Intensity Cardio (45–60 mins)</div>
+          <ul>
+            <li>Option A: Stationary bike — 45 mins steady, Zone 2 (conversational pace, ~60–65% max HR)</li>
+            <li>Option B: Rowing machine — 30–40 mins steady, same effort level</li>
+            <li>Option C: Brisk walk + incline treadmill — 50 mins total</li>
+            <li><strong>No running yet.</strong> Zone 2 cardio is the single best fat-burning and aerobic base tool.</li>
+            <li>If gym, use this day to add 2 sets of lat pulldown + chest press as bonus strength work</li>
+          </ul>
+        </div>
+
+        <div class="workout-block purple">
+          <div class="workout-title">Wed – Mobility & Activation (30–40 mins)</div>
+          <ul>
+            <li>Hip flexor stretch 3x45s each side</li>
+            <li>Banded clamshells 3x15 each side (glute activation)</li>
+            <li>Nordic curl eccentrics — 3x5 SLOW (hamstring injury prevention, critical)</li>
+            <li>Thoracic rotation, world's greatest stretch 5 each side</li>
+            <li>Foam roll: quads, IT band, glutes, upper back — 10 mins</li>
+            <li>This session prepares you for Thursday football. Don't skip it.</li>
+          </ul>
+        </div>
+
+        <div class="workout-block red">
+          <div class="workout-title">Thu – Football Training (Protected)</div>
+          <ul>
+            <li>This counts as your high-intensity session for the week</li>
+            <li>Communicate your hamstring history to your manager/coach if needed</li>
+            <li>Warm-up on your own 10 mins before: dynamic stretching, short accelerations at 60% max</li>
+            <li>Do NOT sprint at max effort yet — build up over 4–5 weeks</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Fri – Cardio Circuit (45–60 mins)</div>
+          <ul>
+            <li>20 min Zone 2 bike or row to warm up</li>
+            <li>Then: 4 rounds of — 40s jumping jacks, 40s high knees (low impact option: fast marching), 40s step-ups, 40s mountain climbers, 40s rest</li>
+            <li>Finish with 10 min walk/cool-down and stretching</li>
+          </ul>
+        </div>
+
+        <div class="workout-block" style="border-left-color:#7ecba1;">
+          <div class="workout-title">Sat – Hike (Weeks 1–3: 6–8km / Weeks 4–5: 10km)</div>
+          <ul>
+            <li>Choose hilly terrain where possible — more calorie burn, less joint stress than running</li>
+            <li>Pack a healthy lunch and water (2L minimum)</li>
+            <li>This is your longest calorie burn of the week. A 10km hike = ~600–800 kcal</li>
+            <li>On weeks where hiking isn't possible: 60 min brisk walk or casual 5-a-side</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase" id="p2">
+      <div class="phase-header" onclick="togglePhase('p2')">
+        <div class="phase-num">02</div>
+        <div class="phase-info">
+          <h3>Build — Run-Walk & Load Up</h3>
+          <div class="meta">Weeks 6–10 &nbsp;·&nbsp; 25 Apr – 29 May &nbsp;·&nbsp; Target: –4kg → 94.5kg</div>
+        </div>
+        <span class="phase-badge" style="background:rgba(58,140,90,0.3);color:#7ecba1;">Moderate</span>
+        <span class="phase-toggle">▼</span>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--grey);font-size:13px;margin-bottom:16px;">By now you should be moving consistently and your hamstring should be feeling much more robust. We introduce run-walk intervals, increase lifting load, and add one extra active session on weekends. Effort level: 6–7/10.</p>
+
+        <div class="workout-block">
+          <div class="workout-title">Mon – Progressive Strength (50–60 mins)</div>
+          <ul>
+            <li>Superset A: Dumbbell goblet squat 4x10 + Push-ups 4x12–15</li>
+            <li>Superset B: Romanian deadlift 4x10 (moderate load) + Dumbbell row 4x10 each arm</li>
+            <li>Superset C: Walking lunges 3x12 each leg + Overhead press 3x10</li>
+            <li>Core finisher: 3 rounds — plank 30s, Russian twists 15 each, leg raises 10</li>
+            <li>Gym alternative: Replace with barbell squats, bench press, deadlifts at moderate weights</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Tue – Run-Walk Intervals (45–55 mins)</div>
+          <ul>
+            <li>Warm-up: 5 min brisk walk</li>
+            <li>Week 6–7: 1 min jog / 2 min walk × 10 rounds</li>
+            <li>Week 8–9: 2 min jog / 1.5 min walk × 8 rounds</li>
+            <li>Week 10: 3 min jog / 1 min walk × 7 rounds</li>
+            <li>Cool-down: 5 min walk + hamstring stretch, calf stretch</li>
+            <li>Run at a pace you can hold a conversation. This is NOT sprinting.</li>
+          </ul>
+        </div>
+
+        <div class="workout-block purple">
+          <div class="workout-title">Wed – Mobility + Ball Work (40 mins)</div>
+          <ul>
+            <li>Full mobility routine from Phase 1 (10 mins)</li>
+            <li>Add: 20 mins of ball work if possible — juggling, passing against a wall, light dribbling</li>
+            <li>Focus on touch and sharpening skills at low intensity</li>
+          </ul>
+        </div>
+
+        <div class="workout-block red">
+          <div class="workout-title">Thu – Football Training</div>
+          <ul>
+            <li>Begin pushing slightly harder this phase</li>
+            <li>By Week 8–9, you can attempt 70–80% sprint efforts in training</li>
+            <li>Still no max-effort sprints — accelerate firmly but don't go to the absolute limit</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Fri – Cardio / HIIT (45–60 mins)</div>
+          <ul>
+            <li>20 min Zone 2 warm-up (bike or row)</li>
+            <li>6 rounds: 30s hard bike sprint / 90s easy — or 30s hard rowing / 90s easy</li>
+            <li>Finish with 10 min cool-down</li>
+            <li>Alternatively: Outdoor 40-min brisk walk/jog if weather is good</li>
+          </ul>
+        </div>
+
+        <div class="workout-block" style="border-left-color:#7ecba1;">
+          <div class="workout-title">Sat – Hike or Active Day (10–14km)</div>
+          <ul>
+            <li>Longer hikes now — aim for 10–14km with elevation gain where possible</li>
+            <li>Alternative: 5-a-side game + 20 min jog before or after</li>
+            <li>This phase, try to include at least 3 proper hikes across the 5 weeks</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase" id="p3">
+      <div class="phase-header" onclick="togglePhase('p3')">
+        <div class="phase-num">03</div>
+        <div class="phase-info">
+          <h3>Conditioning — Football Fitness</h3>
+          <div class="meta">Weeks 11–16 &nbsp;·&nbsp; 30 May – 10 Jul &nbsp;·&nbsp; Target: –4.5kg → 90kg</div>
+        </div>
+        <span class="phase-badge" style="background:rgba(232,64,64,0.15);color:var(--red);">High Intensity</span>
+        <span class="phase-toggle">▼</span>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--grey);font-size:13px;margin-bottom:16px;">This is the heart of the plan. Continuous running replaces run-walk. Gym lifts get heavier. Football-specific conditioning (shuttle runs, change of direction) kicks in. Effort: 7–8/10. You should be feeling significantly lighter and fitter by now.</p>
+
+        <div class="workout-block">
+          <div class="workout-title">Mon – Compound Strength + Power (55–60 mins)</div>
+          <ul>
+            <li>Squat pattern: Bulgarian split squat 4x8 each or barbell back squat 4x6</li>
+            <li>Hinge: Romanian Deadlift 4x8 (heavier now) or trap bar deadlift</li>
+            <li>Push: Dumbbell bench press or floor press 4x10</li>
+            <li>Pull: Dumbbell rows or pull-ups 4x8–10</li>
+            <li>Power finisher: 3x5 box jumps or 3x10 med ball slams (football power)</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Tue – Continuous Run (40–50 mins)</div>
+          <ul>
+            <li>Week 11–12: 25–30 min easy continuous run (no walk breaks)</li>
+            <li>Week 13–14: 35 min run with middle 10 mins at moderate-hard effort</li>
+            <li>Week 15–16: 40–45 min run — last 15 mins comfortably hard</li>
+            <li>Running pace target: you can speak in short sentences but it's not easy</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Fri – Football Conditioning (55 mins)</div>
+          <ul>
+            <li>Warm-up: 10 min jog + dynamic drills</li>
+            <li>Shuttle runs: 5x 10m, 5x 20m — rest 60s between each</li>
+            <li>Cone agility: T-drill or 5-10-5 drill × 6 reps</li>
+            <li>Transition runs: 30s hard run / 30s jog × 8 reps (mimics match intensity)</li>
+            <li>Cool-down: 5 min walk + full stretch</li>
+          </ul>
+        </div>
+
+        <div class="workout-block" style="border-left-color:#7ecba1;">
+          <div class="workout-title">Sat – Hike or 5-a-side + Run</div>
+          <ul>
+            <li>Hike: 12–16km with decent elevation — you're fit enough now to push distance</li>
+            <li>Alt: 5-a-side game + 20–30 min recovery run beforehand</li>
+            <li>These big weekends maintain high weekly calorie output and mental freshness</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase" id="p4">
+      <div class="phase-header" onclick="togglePhase('p4')">
+        <div class="phase-num">04</div>
+        <div class="phase-info">
+          <h3>Peak — Match Sharpness</h3>
+          <div class="meta">Weeks 17–20 &nbsp;·&nbsp; 11 Jul – 7 Aug &nbsp;·&nbsp; Target: –4kg → 89kg</div>
+        </div>
+        <span class="phase-badge" style="background:rgba(245,166,35,0.15);color:var(--amber);">Very High</span>
+        <span class="phase-toggle">▼</span>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--grey);font-size:13px;margin-bottom:16px;">Training now resembles match conditions. Strength work is maintained not increased. Cardio is interval-heavy and football-specific. You should be feeling sharp, confident, and close to your target weight.</p>
+
+        <div class="workout-block red">
+          <div class="workout-title">Tue – Football Interval Session (50 mins)</div>
+          <ul>
+            <li>6x 200m at 80–85% max effort — 90s rest between</li>
+            <li>4x 50m sprint accelerations at near-max — walk back recovery</li>
+            <li>Agility ladder (if available) or cone work 10 mins</li>
+            <li>This is your key aerobic/anaerobic session of the week</li>
+          </ul>
+        </div>
+
+        <div class="workout-block">
+          <div class="workout-title">Mon – Strength Maintenance (45 mins)</div>
+          <ul>
+            <li>Reduce volume, maintain load: Squat 3x5, RDL 3x6, Press 3x8, Row 3x8</li>
+            <li>Plyometric: Box jump 3x5, lateral bounds 3x6 each side</li>
+            <li>Goal: maintain muscle, not build — keep sessions shorter and intense</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Fri – Tempo Run (40 mins)</div>
+          <ul>
+            <li>10 min easy warm-up run</li>
+            <li>20 min at tempo pace (uncomfortable but sustainable — 7–8/10 effort)</li>
+            <li>10 min easy cool-down</li>
+            <li>Simulates the sustained effort of a football half</li>
+          </ul>
+        </div>
+
+        <div class="workout-block" style="border-left-color:#7ecba1;">
+          <div class="workout-title">Sat – 5-a-side / Match or Hike</div>
+          <ul>
+            <li>Prioritise 5-a-side or any football game this phase</li>
+            <li>Hiking still welcome but reduce to 10–12km as overall training load is high</li>
+            <li>You're sharpening game fitness now</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 5 -->
+    <div class="phase" id="p5">
+      <div class="phase-header" onclick="togglePhase('p5')">
+        <div class="phase-num">05</div>
+        <div class="phase-info">
+          <h3>Pre-Season Sharpener</h3>
+          <div class="meta">Weeks 21–24 &nbsp;·&nbsp; 8 Aug – 1 Sep &nbsp;·&nbsp; Target: –2.5kg → 87kg ✓</div>
+        </div>
+        <span class="phase-badge" style="background:rgba(181,232,83,0.15);color:var(--lime);">Season Ready</span>
+        <span class="phase-toggle">▼</span>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--grey);font-size:13px;margin-bottom:16px;">You're essentially doing pre-season work now. High-quality, low-volume training. You want to feel fresh, fast and sharp on opening day — not exhausted. Taper slightly in week 23–24.</p>
+
+        <div class="workout-block red">
+          <div class="workout-title">Tue – Speed & Agility (45 mins)</div>
+          <ul>
+            <li>Full sprint work: 8x 40m at 90–100% — full recovery between</li>
+            <li>Change of direction: 5-10-5 drill, T-drill × 5 each</li>
+            <li>Small-sided game if possible (2v2 or 3v3)</li>
+          </ul>
+        </div>
+
+        <div class="workout-block">
+          <div class="workout-title">Mon – Power & Maintenance (40 mins)</div>
+          <ul>
+            <li>Squat 3x4 heavy, RDL 3x5 heavy, Explosive push-ups 3x8</li>
+            <li>Med ball throws 3x6 (power output)</li>
+            <li>In week 23–24: reduce to 2 sets of each</li>
+          </ul>
+        </div>
+
+        <div class="workout-block amber">
+          <div class="workout-title">Fri – Short Sharp Run (30 mins)</div>
+          <ul>
+            <li>10 min warm-up, 4x 3min at 85% effort / 2 min easy, 10 min cool-down</li>
+            <li>Week 23–24: replace with 30 min easy jog only — taper!</li>
+          </ul>
+        </div>
+
+        <div class="workout-block" style="border-left-color:#7ecba1;">
+          <div class="workout-title">Sat – Final Hike or Rest</div>
+          <ul>
+            <li>One last big hike (Week 21–22) — celebrate how far you've come</li>
+            <li>Week 23–24: gentle walks only. Save the legs for matchday.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEKLY SCHEDULE VIEW -->
+  <div id="weekly" class="section">
+    <div class="section-header">
+      <h2>Weekly Schedule Template</h2>
+      <p>How a typical training week looks across the plan, with the logic behind each day.</p>
+    </div>
+
+    <div class="alert">
+      <strong>🔑 Key principle:</strong> Wednesday is deliberately easy. It's a buffer before Thursday football. Monday–Tuesday is your hard work window. The weekend's active day keeps weekly calorie burn high without formal gym sessions.
+    </div>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:20px 24px 0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(181,232,83,0.3);">
+              <th style="text-align:left;padding:8px 0;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);font-weight:500;">Day</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);font-weight:500;">Phase 1–2</th>
+              <th style="text-align:left;padding:8px 12px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);font-weight:500;">Phase 3–4</th>
+              <th style="text-align:left;padding:8px 0;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);font-weight:500;">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--lime);">MON</td>
+              <td style="padding:12px 12px;color:var(--white);">Bodyweight circuit + mobility</td>
+              <td style="padding:12px 12px;color:var(--white);">Heavy compound lifts + power</td>
+              <td style="padding:12px 0;color:var(--grey);">45–60 min</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--lime);">TUE</td>
+              <td style="padding:12px 12px;color:var(--white);">Zone 2 bike / row</td>
+              <td style="padding:12px 12px;color:var(--white);">Run intervals / football conditioning</td>
+              <td style="padding:12px 0;color:var(--grey);">45–55 min</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--lime);">WED</td>
+              <td style="padding:12px 12px;color:var(--white);">Mobility + foam roll</td>
+              <td style="padding:12px 12px;color:var(--white);">Mobility + ball work</td>
+              <td style="padding:12px 0;color:var(--grey);">30–40 min</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);" >
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--red);">THU</td>
+              <td style="padding:12px 12px;color:var(--white);">⚽ Football training</td>
+              <td style="padding:12px 12px;color:var(--white);">⚽ Football training (push harder)</td>
+              <td style="padding:12px 0;color:var(--grey);">60–90 min</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--lime);">FRI</td>
+              <td style="padding:12px 12px;color:var(--white);">Cardio circuit / HIIT bike</td>
+              <td style="padding:12px 12px;color:var(--white);">Football conditioning / tempo run</td>
+              <td style="padding:12px 0;color:var(--grey);">45–60 min</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--amber);">SAT</td>
+              <td style="padding:12px 12px;color:var(--white);">Hike 6–10km</td>
+              <td style="padding:12px 12px;color:var(--white);">Hike 12–16km or 5-a-side</td>
+              <td style="padding:12px 0;color:var(--grey);">2–4 hrs</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 0;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--grey);">SUN</td>
+              <td style="padding:12px 12px;color:var(--grey);">Full rest or gentle walk</td>
+              <td style="padding:12px 12px;color:var(--grey);">Full rest (critical in Phase 3+)</td>
+              <td style="padding:12px 0;color:var(--grey);">Rest</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:16px 24px;background:rgba(181,232,83,0.04);border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--grey);">Sessions per week: <strong style="color:var(--white);">5–6</strong> &nbsp;·&nbsp; Total training time: <strong style="color:var(--white);">4–6 hrs</strong> &nbsp;·&nbsp; Football included as a session</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Hamstring Rehab Protocol</h2>
+      <p>To be done every Monday and Wednesday for the first 8 weeks, then 2x/week ongoing.</p>
+    </div>
+
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-icon">1️⃣</div>
+        <div class="rule-text">
+          <strong>Nordic Curl Eccentrics (3x5)</strong>
+          <span>Kneel, anchor feet. Lower your body as slowly as possible (3–5 seconds). Use arms to push back up. These are the gold standard for hamstring injury prevention in footballers.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">2️⃣</div>
+        <div class="rule-text">
+          <strong>Romanian Deadlift (3x10, light)</strong>
+          <span>Hip hinge pattern. Strengthens hamstrings through length. Keep back flat, feel the stretch in the hamstring on the way down. Start very light — this is rehab, not strength training.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">3️⃣</div>
+        <div class="rule-text">
+          <strong>Glute Bridge Holds (3x30s)</strong>
+          <span>Activates glutes and takes load off hamstrings. Squeeze hard at the top. Progress to single-leg bridges in Phase 2.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">4️⃣</div>
+        <div class="rule-text">
+          <strong>90/90 Hip Stretch (2x45s each)</strong>
+          <span>Seated on floor, both legs at 90°. Lean into front hip. Addresses hip tightness that contributes to hamstring strain.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">5️⃣</div>
+        <div class="rule-text">
+          <strong>Straight-Leg Raise (3x15)</strong>
+          <span>Lying flat, keep one leg straight and raise to 45°. Strengthens hip flexors and activates hamstring control at the joint.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">⚠️</div>
+        <div class="rule-text">
+          <strong>Rule: Stop if sharp pain</strong>
+          <span>Tightness and mild discomfort is OK. Any sharp or sudden pain = stop, rest 2 days, drop back to previous phase. Consider physio if recurring.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUTRITION -->
+  <div id="nutrition" class="section">
+    <div class="section-header">
+      <h2>Nutrition Plan</h2>
+      <p>Designed for sustainable fat loss while fuelling training and preserving muscle. ~500 kcal daily deficit. No fad dieting.</p>
+    </div>
+
+    <div class="alert">
+      <strong>📊 Your Numbers:</strong> At 102kg and moderately active, your maintenance calories are roughly 2,600–2,800 kcal/day. Target intake: <strong>2,100–2,200 kcal on training days</strong>, <strong>1,900–2,000 kcal on rest days</strong>. As you lose weight and get fitter, recalculate every 4–5 weeks (drop ~50–75 kcal as weight reduces).
+    </div>
+
+    <div class="macro-grid">
+      <div class="macro-card">
+        <div class="macro-val" style="color:var(--red);">180g</div>
+        <div class="macro-unit">per day</div>
+        <div class="macro-lbl">Protein</div>
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;">~720 kcal · 1.8g/kg body weight</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-val" style="color:var(--amber);">200g</div>
+        <div class="macro-unit">per day</div>
+        <div class="macro-lbl">Carbs</div>
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;">~800 kcal · Training fuel</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-val" style="color:var(--lime);">65g</div>
+        <div class="macro-unit">per day</div>
+        <div class="macro-lbl">Fat</div>
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;">~585 kcal · Healthy fats only</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-val" style="color:var(--white);">2,100</div>
+        <div class="macro-unit">kcal training days</div>
+        <div class="macro-lbl">Total Calories</div>
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;">1,900 kcal on rest days</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Daily Meal Structure</h2>
+      <p>A sample training day. Adapt portions to hunger — but keep protein high every meal.</p>
+    </div>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+      <div class="meal">
+        <div class="meal-time">07:00</div>
+        <div>
+          <div class="meal-name">Breakfast</div>
+          <div class="meal-desc">4 scrambled eggs + 2 slices wholegrain toast + half avocado. Or: Greek yogurt (200g) + oats (50g) + handful berries + 1 tbsp nut butter.</div>
+        </div>
+        <div class="meal-cals">500</div>
+      </div>
+      <div class="meal">
+        <div class="meal-time">10:30</div>
+        <div>
+          <div class="meal-name">Mid-Morning Snack</div>
+          <div class="meal-desc">Handful of nuts (almonds/cashews) + 1 piece of fruit. Or: Protein shake (if needed for protein target). Skip if not hungry.</div>
+        </div>
+        <div class="meal-cals">200</div>
+      </div>
+      <div class="meal">
+        <div class="meal-time">13:00</div>
+        <div>
+          <div class="meal-name">Lunch</div>
+          <div class="meal-desc">Chicken/tuna/salmon (150–180g) + large salad or roasted veg + 1 serving of rice, quinoa, or sweet potato. Olive oil dressing.</div>
+        </div>
+        <div class="meal-cals">550</div>
+      </div>
+      <div class="meal">
+        <div class="meal-time">16:30</div>
+        <div>
+          <div class="meal-name">Pre-Training Snack</div>
+          <div class="meal-desc">Banana + rice cakes with peanut butter. Or: small bowl of oats. Eat 60–90 mins before training. Skip on rest days.</div>
+        </div>
+        <div class="meal-cals">250</div>
+      </div>
+      <div class="meal">
+        <div class="meal-time">19:30</div>
+        <div>
+          <div class="meal-name">Dinner (Post-Training)</div>
+          <div class="meal-desc">Lean protein (150–200g chicken, beef, fish, eggs) + large portion of veg + moderate carbs (rice, pasta, potato). Example: Salmon fillet + broccoli + new potatoes.</div>
+        </div>
+        <div class="meal-cals">600</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Nutrition Rules</h2>
+    </div>
+
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-icon">💧</div>
+        <div class="rule-text">
+          <strong>Hydration: 3L Water/Day</strong>
+          <span>Drink 500ml on waking, 500ml pre-session, 500ml during, 500ml after. Being dehydrated tanks performance and masks hunger cues. No sugary drinks.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🥩</div>
+        <div class="rule-text">
+          <strong>Protein Every Meal</strong>
+          <span>Eggs, chicken, turkey, beef (lean), salmon, tuna, Greek yogurt, cottage cheese, lentils. Aim for 40–50g per meal. This protects muscle during fat loss.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍚</div>
+        <div class="rule-text">
+          <strong>Carbs Around Training</strong>
+          <span>Have more carbs on training days, fewer on rest days. Carbs before = energy. Carbs after = recovery. Minimise them on Sunday (rest day).</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍺</div>
+        <div class="rule-text">
+          <strong>Alcohol: Maximum 2 Units/Week</strong>
+          <span>Alcohol kills recovery, disrupts sleep, and is liquid calories. This is one of the biggest levers you can pull. Pre-season = sober season if possible.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍕</div>
+        <div class="rule-text">
+          <strong>One Flex Meal Per Week</strong>
+          <span>Not a cheat day. One meal where you eat what you want without tracking. This makes the plan sustainable. Just don't let it become a cheat day.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🥦</div>
+        <div class="rule-text">
+          <strong>Volume Eating for Satiety</strong>
+          <span>Fill half your plate with vegetables at lunch and dinner. High volume, very low calories. You'll feel full and hit your deficit without starving.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍫</div>
+        <div class="rule-text">
+          <strong>Cut the Obvious Junk First</strong>
+          <span>Biscuits, crisps, chocolate bars, takeaways, fizzy drinks. These are high-calorie, low-satiety. Removing them alone may create 400–600 kcal deficit without changing meals.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">📦</div>
+        <div class="rule-text">
+          <strong>Sunday Meal Prep</strong>
+          <span>Cook 4–5 portions of protein on Sunday (chicken thighs, mince, eggs). Have cooked rice or potatoes ready. This removes the "I'll just order a takeaway" moments mid-week.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Match Day / Football Training Nutrition</h2>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-icon">⚡</div>
+        <div class="rule-text">
+          <strong>2–3 hrs before training</strong>
+          <span>Proper meal: carb-focused. Rice/pasta/potato + protein. Not a huge meal — about 500 kcal.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🍌</div>
+        <div class="rule-text">
+          <strong>60–90 mins before</strong>
+          <span>Small carb snack only if needed: banana, rice cakes, small handful of dates. Nothing heavy.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">🔄</div>
+        <div class="rule-text">
+          <strong>Within 45 mins after</strong>
+          <span>Protein + carb recovery: protein shake + banana, or chicken rice bowl. This window matters for muscle repair and hamstring recovery.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div id="milestones" class="section">
+    <div class="section-header">
+      <h2>Weight & Fitness Milestones</h2>
+      <p>Track these checkpoints every 2–3 weeks. Remember: weight fluctuates daily. Trend matters, not single readings.</p>
+    </div>
+
+    <div class="alert">
+      <strong>📏 How to weigh yourself:</strong> First thing in the morning, after using the toilet, before eating or drinking. Same day of the week. Track the weekly average, not daily. Use a tape measure around your waist alongside the scales — fat loss sometimes outpaces scale movement.
+    </div>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="padding:16px 24px 0;">
+        <div class="tracker-row header">
+          <div>Checkpoint</div>
+          <div>Target kg</div>
+          <div>Timeline</div>
+          <div class="tracker-note">Fitness Milestone</div>
+        </div>
+
+        <div class="tracker-row">
+          <div class="milestone">🟢 Start</div>
+          <div style="color:var(--grey);">102 kg</div>
+          <div style="color:var(--grey);">20 Mar</div>
+          <div class="milestone-note tracker-note">Beginning the journey</div>
+        </div>
+
+        <div class="tracker-row">
+          <div>End Phase 1</div>
+          <div>~98.5 kg</div>
+          <div style="color:var(--grey);">24 Apr</div>
+          <div class="milestone-note tracker-note">30 min bike without stopping, 3 football sessions completed</div>
+        </div>
+
+        <div class="tracker-row">
+          <div>Phase 2 Mid</div>
+          <div>~96 kg</div>
+          <div style="color:var(--grey);">15 May</div>
+          <div class="milestone-note tracker-note">Run-walk 30 mins, noticeable weight reduction visible</div>
+        </div>
+
+        <div class="tracker-row">
+          <div>End Phase 2</div>
+          <div>~94.5 kg</div>
+          <div style="color:var(--grey);">29 May</div>
+          <div class="milestone-note tracker-note">25 min continuous run, 5kg total lost ✓</div>
+        </div>
+
+        <div class="tracker-row">
+          <div class="milestone">🔵 Halfway</div>
+          <div class="milestone">~93 kg</div>
+          <div style="color:var(--grey);">12 Jun</div>
+          <div class="milestone-note tracker-note">30 min continuous run, noticeably fitter at football</div>
+        </div>
+
+        <div class="tracker-row">
+          <div>End Phase 3</div>
+          <div>~90 kg</div>
+          <div style="color:var(--grey);">10 Jul</div>
+          <div class="milestone-note tracker-note">Football fitness transformed, 12kg lost ✓</div>
+        </div>
+
+        <div class="tracker-row">
+          <div>End Phase 4</div>
+          <div>~89 kg</div>
+          <div style="color:var(--grey);">7 Aug</div>
+          <div class="milestone-note tracker-note">Near-full sprint capacity, 13kg lost</div>
+        </div>
+
+        <div class="tracker-row" style="border-bottom:none;">
+          <div class="milestone">🏆 Season Start</div>
+          <div class="milestone">87 kg</div>
+          <div style="color:var(--lime);">1 Sep</div>
+          <div class="milestone-note tracker-note" style="color:var(--lime);">Match-ready. 15kg lost. New season. 🎉</div>
+        </div>
+      </div>
+      <div style="padding:16px 24px;background:rgba(181,232,83,0.04);border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--grey);">Progress bars below show phase completion relative to overall goal</span>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:16px;">Phase Progress to Goal</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Phase 1: Foundation</span><span style="color:var(--grey);">–3.5kg of 15kg</span></div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:23%;"></div></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Phase 2: Build</span><span style="color:var(--grey);">–7.5kg of 15kg</span></div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:50%;"></div></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Phase 3: Conditioning</span><span style="color:var(--grey);">–12kg of 15kg</span></div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:80%;"></div></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Phase 4: Peak</span><span style="color:var(--grey);">–13kg of 15kg</span></div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:87%;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span style="color:var(--lime);">Phase 5: Pre-Season ✓</span><span style="color:var(--lime);">–15kg GOAL REACHED</span></div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:100%;background:var(--lime);"></div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>Fitness Test Benchmarks</h2>
+      <p>Test yourself at the end of each phase to track real-world fitness improvement beyond the scales.</p>
+    </div>
+
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-icon">🏃</div>
+        <div class="rule-text">
+          <strong>1-Mile Walk/Run Test</strong>
+          <span>Phase 1 baseline: just complete it at any pace. Phase 3 target: under 9 mins. Phase 5 target: under 8 mins. This directly correlates with match fitness.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">💪</div>
+        <div class="rule-text">
+          <strong>Push-Up Test</strong>
+          <span>Max reps in one go. Phase 1: 10–15. Phase 3: 25+. Phase 5: 35+. Upper body strength marker.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">⬆️</div>
+        <div class="rule-text">
+          <strong>Vertical Jump</strong>
+          <span>Stand next to a wall, reach and mark. Jump and mark. Measure difference. Phase 1 baseline. Phase 5: aim for 3–4cm improvement minimum.</span>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-icon">⏱️</div>
+        <div class="rule-text">
+          <strong>Resting Heart Rate</strong>
+          <span>Check every morning before getting up. Phase 1: likely 70–80bpm. Phase 5 target: 58–65bpm. Lower = fitter cardiovascular system.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function togglePhase(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
