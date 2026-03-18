@@ -48,7 +48,9 @@ const DEFAULT_DATA = {
     { id: 'weekend',  name: 'Weekend Away',       icon: '🏨', price: 300 }
   ],
   // Record of every in-app coin purchase
-  purchases: []
+  purchases: [],
+  // Last 5 logged quests for Quick Log chips
+  recentQuests: []
 };
 
 // ─── File I/O ────────────────────────────────────────────────────────────────
@@ -85,6 +87,10 @@ function loadData() {
     data.purchases = [];
     dirty = true;
   }
+  if (!data.recentQuests) {
+    data.recentQuests = [];
+    dirty = true;
+  }
   if (dirty) saveData(data);
   return data;
 }
@@ -99,10 +105,13 @@ function xpForLevel(n) {
   return 100 * n * n;
 }
 
-function calculateXP(duration, difficulty, uncomfortability, multiplier) {
-  if (multiplier === undefined) multiplier = 1.0;
+function calculateXP(duration, difficulty, uncomfortability, multiplier, importance) {
+  if (multiplier  === undefined) multiplier  = 1.0;
+  if (importance  === undefined) importance  = 3;
+  // Importance 1→1.0×, 2→1.075×, 3→1.15×, 4→1.225×, 5→1.3×
+  const importanceMult = 1.0 + (importance - 1) * 0.075;
   const base = (duration * 10) + (difficulty * 12) + (uncomfortability * 15);
-  return Math.round(base * multiplier);
+  return Math.round(base * multiplier * importanceMult);
 }
 
 function calculateLevel(totalXP) {
@@ -202,7 +211,8 @@ function addTask(taskObj) {
   const prevLevel = data.player.level;
 
   const xp = calculateXP(
-    taskObj.duration, taskObj.difficulty, taskObj.uncomfortability, data.player.xpMultiplier
+    taskObj.duration, taskObj.difficulty, taskObj.uncomfortability,
+    data.player.xpMultiplier, taskObj.importance
   );
 
   const task = {
@@ -214,11 +224,25 @@ function addTask(taskObj) {
     score:            taskObj.score !== undefined ? taskObj.score : 3,
     difficulty:       taskObj.difficulty,
     uncomfortability: taskObj.uncomfortability,
+    importance:       taskObj.importance !== undefined ? taskObj.importance : 3,
     xpAwarded:        xp
   };
 
   data.tasks.push(task);
   data.player.totalXP += xp;
+
+  // Update Quick Log recent list — dedupe by name, newest first, cap at 5
+  if (!data.recentQuests) data.recentQuests = [];
+  data.recentQuests = data.recentQuests.filter(q => q.name.toLowerCase() !== task.name.toLowerCase());
+  data.recentQuests.unshift({
+    name:             task.name,
+    category:         task.category,
+    duration:         task.duration,
+    difficulty:       task.difficulty,
+    uncomfortability: task.uncomfortability,
+    importance:       task.importance
+  });
+  data.recentQuests = data.recentQuests.slice(0, 5);
 
   const newLevel = calculateLevel(data.player.totalXP);
   data.player.level     = newLevel;

@@ -2,6 +2,8 @@
 // State
 // ─────────────────────────────────────────
 let currentTab = 'dashboard';
+let lastTaskTimestamp = 0;   // ms timestamp of last logged quest, 0 = none
+let undoTimerInterval = null; // countdown interval id
 
 // Duration labels vary by category. Keyed by category id; falls back to 'default'.
 const DURATION_LABELS_BY_CAT = {
@@ -18,6 +20,7 @@ function getDurationLabels(categoryId) {
 
 const SLIDER_DIFF_LABELS   = ['', 'Trivial', 'Easy', 'Moderate', 'Hard', 'Brutal'];
 const SLIDER_UNCOMF_LABELS = ['', 'Comfortable', 'Slightly uneasy', 'Uncomfortable', 'Very uncomfortable', 'Pure dread'];
+const SLIDER_IMP_LABELS    = ['', 'Trivial (1.0×)', 'Minor (1.075×)', 'Normal (1.15×)', 'Important (1.225×)', 'Critical (1.3×)'];
 
 // ─────────────────────────────────────────
 // Boot
@@ -104,6 +107,24 @@ function esc(str) {
 // ─────────────────────────────────────────
 // Dashboard
 // ─────────────────────────────────────────
+function getWeeklyXP(tasks) {
+  const today      = new Date();
+  const todayISO   = today.toISOString().slice(0, 10);
+  const dow        = today.getDay();                    // 0=Sun
+  const monday     = new Date(today);
+  monday.setDate(today.getDate() - ((dow + 6) % 7));   // roll back to Monday
+  const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return Array.from({ length: 7 }, (_, i) => {
+    const d   = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const xp  = tasks
+      .filter(t => t.date === iso)
+      .reduce((sum, t) => sum + t.xpAwarded, 0);
+    return { iso, xp, label: DAY_LABELS[i], isToday: iso === todayISO, isFuture: iso > todayISO };
+  });
+}
+
 function renderDashboard() {
   const data      = loadData();
   const { player, tasks, categories } = data;
@@ -114,6 +135,37 @@ function renderDashboard() {
   const bracketSize = getXPForNextLevel(player.level);
   const remaining   = bracketSize - player.currentXP;
   const pct         = Math.min(100, Math.round((player.currentXP / bracketSize) * 100));
+
+  // Weekly XP chart data
+  const weekDays  = getWeeklyXP(tasks);
+  const maxXP     = Math.max(...weekDays.map(d => d.xp), 1);
+  const weekTotal = weekDays.reduce((s, d) => s + d.xp, 0);
+  const chartBarsHTML = weekDays.map((d, i) => {
+    const pctH = Math.round((d.xp / maxXP) * 100);
+    return `
+      <div class="chart-col${d.isToday ? ' chart-col--today' : ''}${d.isFuture ? ' chart-col--future' : ''}">
+        <div class="chart-xp-label">${d.xp > 0 ? d.xp : ''}</div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar" data-pct="${pctH}" style="height:0%"></div>
+        </div>
+        <div class="chart-day-label">${d.label}</div>
+      </div>`;
+  }).join('');
+
+  // Undo bar — visible for 60s after last quest submission
+  const undoSecsLeft = Math.ceil((60000 - (Date.now() - lastTaskTimestamp)) / 1000);
+  const showUndo     = lastTaskTimestamp > 0 && undoSecsLeft > 0 && tasks.length > 0;
+  const undoBarHTML  = showUndo ? `
+    <div class="undo-bar" id="undo-bar">
+      <div class="undo-bar-info">
+        <span class="undo-bar-name">${esc(tasks[tasks.length - 1].name)}</span>
+        <span class="undo-bar-xp">+${tasks[tasks.length - 1].xpAwarded} XP</span>
+      </div>
+      <button class="btn-undo" id="btn-undo-quest">
+        ↩ Undo
+        <span class="undo-countdown" id="undo-countdown">${undoSecsLeft}</span>
+      </button>
+    </div>` : '';
 
   const recent  = [...tasks].reverse().slice(0, 5);
   const recentHTML = recent.length
@@ -152,6 +204,8 @@ function renderDashboard() {
       </div>` : ''}
     </div>
 
+    ${undoBarHTML}
+
     <div class="stat-row">
       <div class="stat-card">
         <div class="stat-icon">🔥</div>
@@ -170,17 +224,52 @@ function renderDashboard() {
       </div>
     </div>
 
+    <div class="section-heading">This Week</div>
+    <div class="weekly-chart">
+      <div class="weekly-chart-bars">${chartBarsHTML}</div>
+      <div class="weekly-chart-footer">
+        <span class="weekly-total-label">Week Total</span>
+        <span class="weekly-total-value">${weekTotal.toLocaleString()} XP</span>
+      </div>
+    </div>
+
     <div class="section-heading">Recent Quests</div>
     <div class="task-list">${recentHTML}</div>
   `;
 
-  // Animate bar after paint
+  // Animate XP bar + chart bars after paint
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const fill = document.getElementById('xp-bar-fill');
       if (fill) fill.style.width = `${pct}%`;
+
+      document.querySelectorAll('.chart-bar').forEach((bar, i) => {
+        setTimeout(() => {
+          bar.style.height = bar.dataset.pct + '%';
+        }, i * 60);
+      });
     });
   });
+
+  // Clear any previous undo countdown then start a fresh one
+  clearInterval(undoTimerInterval);
+  if (showUndo) {
+    document.getElementById('btn-undo-quest').addEventListener('click', undoLastTask);
+
+    undoTimerInterval = setInterval(() => {
+      const secs = Math.ceil((60000 - (Date.now() - lastTaskTimestamp)) / 1000);
+      const el   = document.getElementById('undo-countdown');
+      const bar  = document.getElementById('undo-bar');
+      if (!el || !bar) { clearInterval(undoTimerInterval); return; }
+      if (secs <= 0) {
+        clearInterval(undoTimerInterval);
+        bar.classList.add('undo-bar--expire');
+        setTimeout(() => { if (bar.parentNode) bar.remove(); }, 400);
+      } else {
+        el.textContent = secs;
+      }
+    }, 1000);
+  }
 }
 
 // ─────────────────────────────────────────
@@ -189,15 +278,27 @@ function renderDashboard() {
 function renderLogTask() {
   const data       = loadData();
   const categories = data.categories;
+  const recent     = data.recentQuests || [];
 
   const catOptions = categories
     .map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
     .join('');
 
+  const quickLogHTML = recent.length ? `
+    <div class="quick-log-wrap">
+      <div class="quick-log-label">Quick Log</div>
+      <div class="quick-log-chips" id="quick-log-chips">
+        ${recent.map((q, i) => `
+          <button type="button" class="quick-chip" data-idx="${i}">${esc(q.name)}</button>
+        `).join('')}
+      </div>
+    </div>` : '';
+
   document.getElementById('screen-log').innerHTML = `
     <div class="screen-header">
       <h1>Log <span class="header-accent">Quest</span></h1>
     </div>
+    ${quickLogHTML}
     <form class="log-form" id="log-form" autocomplete="off">
 
       <div class="form-group">
@@ -237,6 +338,15 @@ function renderLogTask() {
           <input type="range" id="slider-uncomfort" min="1" max="5" value="3" step="1" />
           <div class="slider-desc" id="desc-uncomfort">${SLIDER_UNCOMF_LABELS[3]}</div>
         </div>
+
+        <div class="slider-row slider-row--importance">
+          <div class="slider-header">
+            <span class="slider-label">Importance</span>
+            <span class="slider-value" id="val-importance">3</span>
+          </div>
+          <input type="range" id="slider-importance" min="1" max="5" value="3" step="1" />
+          <div class="slider-desc" id="desc-importance">${SLIDER_IMP_LABELS[3]}</div>
+        </div>
       </div>
 
       <div class="xp-preview">
@@ -261,6 +371,7 @@ function setupLogForm() {
   const sliderDur  = document.getElementById('slider-duration');
   const sliderDiff = document.getElementById('slider-difficulty');
   const sliderUnc  = document.getElementById('slider-uncomfort');
+  const sliderImp  = document.getElementById('slider-importance');
   const xpDisplay  = document.getElementById('xp-preview-value');
   const btnComplete = document.getElementById('btn-complete');
 
@@ -269,35 +380,40 @@ function setupLogForm() {
     const dur     = +sliderDur.value;
     const diff    = +sliderDiff.value;
     const unc     = +sliderUnc.value;
+    const imp     = +sliderImp.value;
     const catId   = document.getElementById('task-category').value;
-    const xp      = calculateXP(dur, diff, unc, data.player.xpMultiplier);
+    const xp      = calculateXP(dur, diff, unc, data.player.xpMultiplier, imp);
     const durLabels = getDurationLabels(catId);
 
     // Update value labels
     document.getElementById('val-duration').textContent   = dur;
     document.getElementById('val-difficulty').textContent = diff;
     document.getElementById('val-uncomfort').textContent  = unc;
+    document.getElementById('val-importance').textContent = imp;
 
     // Update desc labels
-    document.getElementById('desc-duration').textContent  = durLabels[dur];
+    document.getElementById('desc-duration').textContent   = durLabels[dur];
     document.getElementById('desc-difficulty').textContent = SLIDER_DIFF_LABELS[diff];
     document.getElementById('desc-uncomfort').textContent  = SLIDER_UNCOMF_LABELS[unc];
+    document.getElementById('desc-importance').textContent = SLIDER_IMP_LABELS[imp];
 
     // Pop animation on XP number
     xpDisplay.textContent = xp;
     xpDisplay.classList.remove('pop');
-    void xpDisplay.offsetWidth; // reflow
+    void xpDisplay.offsetWidth;
     xpDisplay.classList.add('pop');
     setTimeout(() => xpDisplay.classList.remove('pop'), 200);
 
     // Update slider fill gradient
+    // Importance slider uses amber to signal "stakes"
     [
-      [sliderDur,  dur],
-      [sliderDiff, diff],
-      [sliderUnc,  unc]
-    ].forEach(([el, val]) => {
+      [sliderDur,  dur,  'var(--accent)'],
+      [sliderDiff, diff, 'var(--accent)'],
+      [sliderUnc,  unc,  'var(--accent)'],
+      [sliderImp,  imp,  imp >= 4 ? '#e07030' : 'var(--accent)']
+    ].forEach(([el, val, colour]) => {
       const pct = ((val - 1) / 4) * 100;
-      el.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+      el.style.background = `linear-gradient(to right, ${colour} ${pct}%, var(--border) ${pct}%)`;
     });
 
     // Enable button only if name filled
@@ -306,11 +422,38 @@ function setupLogForm() {
 
   // Initial render
   refreshXP();
+
+  // Quick Log chip clicks — pre-fill the form
+  const chipsWrap = document.getElementById('quick-log-chips');
+  if (chipsWrap) {
+    chipsWrap.addEventListener('click', e => {
+      const chip = e.target.closest('.quick-chip');
+      if (!chip) return;
+      const recent = (loadData().recentQuests || []);
+      const q = recent[+chip.dataset.idx];
+      if (!q) return;
+
+      nameInput.value                                             = q.name;
+      document.getElementById('task-category').value             = q.category;
+      document.getElementById('slider-duration').value           = q.duration;
+      document.getElementById('slider-difficulty').value         = q.difficulty;
+      document.getElementById('slider-uncomfort').value          = q.uncomfortability;
+      document.getElementById('slider-importance').value         = q.importance;
+
+      // Flash the active chip
+      chipsWrap.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('quick-chip--active'));
+      chip.classList.add('quick-chip--active');
+
+      refreshXP();
+    });
+  }
+
   nameInput.addEventListener('input', refreshXP);
   document.getElementById('task-category').addEventListener('change', refreshXP);
   sliderDur.addEventListener('input',  refreshXP);
   sliderDiff.addEventListener('input', refreshXP);
   sliderUnc.addEventListener('input',  refreshXP);
+  sliderImp.addEventListener('input',  refreshXP);
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -322,26 +465,31 @@ function setupLogForm() {
 
     const result = addTask({
       name,
-      category:        document.getElementById('task-category').value,
-      duration:        +sliderDur.value,
-      difficulty:      +sliderDiff.value,
+      category:         document.getElementById('task-category').value,
+      duration:         +sliderDur.value,
+      difficulty:       +sliderDiff.value,
       uncomfortability: +sliderUnc.value,
-      score:           3
+      importance:       +sliderImp.value,
+      score:            3
     });
 
-    // Ripple effect on button
-    spawnRipple(btnComplete);
+    // Mark undo window
+    lastTaskTimestamp = Date.now();
 
-    // Show XP toast
-    showXPToast(result.xpGained);
+    // Ripple + XP fly-up + sound
+    spawnRipple(btnComplete);
+    playXPSound();
+    showXPFlyup(result.xpGained);
 
     if (result.leveledUp) {
-      await delay(400);
-      showLevelUpOverlay(result.newLevel);
+      await delay(700);
+      await showLevelUpOverlay(result.newLevel);
+      await delay(250);
+    } else {
+      await delay(1400);
     }
 
     // Go back to dashboard
-    await delay(result.leveledUp ? 2200 : 800);
     switchTab('dashboard');
   });
 }
@@ -559,8 +707,7 @@ function renderSettings() {
     d.player.totalXP         = 0;
     d.player.currentXP       = 0;
     saveData(d);
-    showLevelUpOverlay('✦');
-    setTimeout(() => renderSettings(), 2200);
+    showLevelUpOverlay('✦').then(() => renderSettings());
   });
 }
 
@@ -577,22 +724,14 @@ function renderIdentity() {
   // ── Skill ring helpers ──────────────────
   const CIRC = 226.2; // 2π × 36
 
-  // Skills that have a dedicated dashboard page
-  const SKILL_DASHBOARDS = {
-    health: 'health-dashboard.html'
-  };
-
   function skillCardHTML(skill) {
     const pct    = skill.level >= 99 ? 1 : skill.progressXP / skill.bracketXP;
     const barPct = Math.round(pct * 100);
     const isMax  = skill.level >= 99;
-    const dashboardUrl = SKILL_DASHBOARDS[skill.id];
-    const clickAttr = dashboardUrl
-      ? `data-dashboard="${dashboardUrl}" role="button" tabindex="0" title="Open ${skill.name} Dashboard"`
-      : '';
     return `
-      <div class="skill-card${dashboardUrl ? ' skill-card--linked' : ''}" style="--skill-colour:${skill.colour}" ${clickAttr}>
-        ${dashboardUrl ? `<div class="skill-card-link-hint">View Plan →</div>` : ''}
+      <div class="skill-card skill-card--tappable" style="--skill-colour:${skill.colour}"
+           data-skill-id="${esc(skill.id)}" role="button" tabindex="0" title="View ${skill.name} history">
+        <div class="skill-card-tap-hint">Details ›</div>
         <div class="skill-ring-wrap">
           <svg class="skill-ring" viewBox="0 0 88 88">
             <circle class="skill-ring-bg" cx="44" cy="44" r="36"/>
@@ -754,9 +893,9 @@ function renderIdentity() {
     });
   });
 
-  // ── Skill card navigation ───────────────
-  document.querySelectorAll('.skill-card--linked').forEach(card => {
-    const handler = () => { window.location.href = card.dataset.dashboard; };
+  // ── Skill card → drawer ─────────────────
+  document.querySelectorAll('.skill-card--tappable').forEach(card => {
+    const handler = () => showSkillDrawer(card.dataset.skillId);
     card.addEventListener('click', handler);
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handler(); });
   });
@@ -835,11 +974,90 @@ function showCoinToast(text) {
   setTimeout(() => { toast.classList.remove('show'); toast.style.background = ''; }, 2000);
 }
 
+function showXPFlyup(xp) {
+  const el = document.createElement('div');
+  el.className = 'xp-flyup';
+  el.textContent = `+${xp} XP`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1800);
+}
+
+function playXPSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523, 0, 0.28], [659, 0.11, 0.28], [784, 0.22, 0.45]].forEach(([freq, when, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.22, ctx.currentTime + when);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + dur);
+      osc.start(ctx.currentTime + when);
+      osc.stop(ctx.currentTime + when + dur + 0.05);
+    });
+  } catch(e) {}
+}
+
+function playLevelUpSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Rising fanfare: four quick steps then a triumphant sustained chord
+    [
+      [392, 0,    0.18, 'triangle'],
+      [523, 0.14, 0.18, 'triangle'],
+      [659, 0.28, 0.18, 'triangle'],
+      [784, 0.42, 0.7,  'triangle'],
+      [784, 0.42, 0.7,  'sine'],
+      [1047,0.42, 0.7,  'sine'],
+    ].forEach(([freq, when, dur, type]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + when);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + dur + 0.3);
+      osc.start(ctx.currentTime + when);
+      osc.stop(ctx.currentTime + when + dur + 0.35);
+    });
+  } catch(e) {}
+}
+
 function showLevelUpOverlay(level) {
-  const overlay = document.getElementById('levelup-overlay');
-  document.getElementById('levelup-number').textContent = level;
-  overlay.classList.add('active');
-  setTimeout(() => overlay.classList.remove('active'), 2000);
+  return new Promise(resolve => {
+    const overlay   = document.getElementById('levelup-overlay');
+    const particles = document.getElementById('levelup-particles');
+
+    document.getElementById('levelup-number').textContent = level;
+
+    // Spawn particle burst
+    particles.innerHTML = '';
+    for (let i = 0; i < 28; i++) {
+      const p     = document.createElement('div');
+      p.className = 'particle';
+      const angle = (i / 28) * 360;
+      const dist  = 70 + Math.random() * 130;
+      const tx    = Math.round(Math.cos(angle * Math.PI / 180) * dist);
+      const ty    = Math.round(Math.sin(angle * Math.PI / 180) * dist);
+      const col   = Math.random() > 0.4 ? 'var(--gold)' : 'var(--accent)';
+      const dur   = (0.7 + Math.random() * 0.5).toFixed(2) + 's';
+      const dly   = (Math.random() * 0.2).toFixed(2) + 's';
+      p.style.cssText = `--tx:${tx}px;--ty:${ty}px;--dur:${dur};--delay:${dly};background:${col}`;
+      particles.appendChild(p);
+    }
+
+    overlay.classList.add('active');
+    playLevelUpSound();
+
+    const dismiss = () => {
+      overlay.classList.remove('active');
+      overlay.removeEventListener('click', dismiss);
+      resolve();
+    };
+    overlay.addEventListener('click', dismiss);
+    setTimeout(dismiss, 3200);
+  });
 }
 
 function spawnRipple(btn) {
@@ -851,6 +1069,138 @@ function spawnRipple(btn) {
   btn.style.overflow = 'hidden';
   btn.appendChild(ripple);
   setTimeout(() => ripple.remove(), 700);
+}
+
+// ─────────────────────────────────────────
+// Skill Drawer
+// ─────────────────────────────────────────
+function computeSkillLevelHistory(skill, tasks) {
+  const sorted = [...tasks].sort((a, b) => a.date.localeCompare(b.date));
+  const isDisc = !skill.categories; // discipline counts all tasks
+  let cumXP = 0, prevLevel = 0;
+  const milestones = [];
+  for (const task of sorted) {
+    const relevant = isDisc || skill.categories.includes(task.category);
+    if (!relevant) continue;
+    cumXP += isDisc ? 50 : task.xpAwarded;
+    const newLevel = computeSkillLevel(cumXP);
+    if (newLevel > prevLevel) {
+      for (let l = prevLevel + 1; l <= newLevel; l++) milestones.push({ level: l, date: task.date });
+      prevLevel = newLevel;
+    }
+  }
+  return milestones;
+}
+
+function showSkillDrawer(skillId) {
+  const data   = loadData();
+  const skillMeta = data.skills.find(s => s.id === skillId);
+  if (!skillMeta) return;
+  const computed  = computeAllSkills(data).find(s => s.id === skillId);
+  const isDisc    = !skillMeta.categories;
+
+  // Last 5 contributing quests
+  const contribTasks = isDisc
+    ? [...data.tasks].reverse().slice(0, 5)
+    : [...data.tasks].filter(t => skillMeta.categories.includes(t.category)).reverse().slice(0, 5);
+
+  // Level milestones — show last 5
+  const history   = computeSkillLevelHistory(skillMeta, data.tasks);
+  const recent5   = history.slice(-5).reverse();
+
+  const questsHTML = contribTasks.length
+    ? contribTasks.map(t => {
+        const cat = getCategoryById(data.categories, t.category);
+        const xpLabel = isDisc ? '+50 XP' : `+${t.xpAwarded} XP`;
+        return `
+          <div class="sd-quest-row">
+            <div class="sd-quest-info">
+              <span class="sd-quest-name">${esc(t.name)}</span>
+              <span class="sd-quest-cat" style="color:${cat.colour}">${esc(cat.name)}</span>
+            </div>
+            <span class="sd-quest-xp">${xpLabel}</span>
+          </div>`;
+      }).join('')
+    : `<div class="sd-empty">No quests yet.</div>`;
+
+  const milestonesHTML = recent5.length
+    ? recent5.map(m => `
+        <div class="sd-milestone-row">
+          <span class="sd-milestone-dot" style="background:${skillMeta.colour}"></span>
+          <span class="sd-milestone-label">Reached <strong>Level ${m.level}</strong></span>
+          <span class="sd-milestone-date">${formatDate(m.date)}</span>
+        </div>`).join('')
+    : `<div class="sd-empty">No levels reached yet.</div>`;
+
+  // XP bar for drawer header
+  const pct = computed.level >= 99 ? 100 : Math.round((computed.progressXP / computed.bracketXP) * 100);
+
+  const drawerHTML = `
+    <div class="skill-drawer" id="skill-drawer">
+      <div class="skill-drawer-handle"></div>
+      <div class="skill-drawer-head">
+        <div class="sd-icon-wrap" style="background:${skillMeta.colour}22;border-color:${skillMeta.colour}44">
+          <span class="sd-icon">${skillMeta.icon}</span>
+        </div>
+        <div class="sd-head-info">
+          <div class="sd-name" style="color:${skillMeta.colour}">${esc(skillMeta.name)}</div>
+          <div class="sd-level">Level <strong>${computed.level}</strong>
+            <span class="sd-xp-note">${computed.progressXP.toLocaleString()} / ${computed.bracketXP.toLocaleString()} XP</span>
+          </div>
+          <div class="sd-xp-track">
+            <div class="sd-xp-fill" style="width:${pct}%;background:${skillMeta.colour}"></div>
+          </div>
+        </div>
+        <button class="sd-close" id="sd-close" aria-label="Close">×</button>
+      </div>
+      <div class="skill-drawer-body">
+        <div class="sd-section-title">Recent Quests</div>
+        ${questsHTML}
+        <div class="sd-section-title" style="margin-top:20px">Level History</div>
+        ${milestonesHTML}
+      </div>
+    </div>
+    <div class="skill-drawer-backdrop" id="sd-backdrop"></div>`;
+
+  // Remove any existing drawer
+  document.getElementById('skill-drawer')?.remove();
+  document.getElementById('sd-backdrop')?.remove();
+
+  document.body.insertAdjacentHTML('beforeend', drawerHTML);
+
+  const drawer   = document.getElementById('skill-drawer');
+  const backdrop = document.getElementById('sd-backdrop');
+
+  const close = () => {
+    drawer.classList.add('skill-drawer--closing');
+    backdrop.classList.add('skill-drawer-backdrop--closing');
+    setTimeout(() => { drawer.remove(); backdrop.remove(); }, 320);
+  };
+
+  document.getElementById('sd-close').addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+
+  // Trigger open animation
+  requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('skill-drawer--open')));
+}
+
+function undoLastTask() {
+  clearInterval(undoTimerInterval);
+  lastTaskTimestamp = 0;
+
+  const data = loadData();
+  if (!data.tasks.length) return;
+
+  const last = data.tasks[data.tasks.length - 1];
+  data.tasks.pop();
+  data.player.totalXP  = Math.max(0, data.player.totalXP - last.xpAwarded);
+  const newLevel       = calculateLevel(data.player.totalXP);
+  data.player.level    = newLevel;
+  data.player.currentXP = data.player.totalXP - levelFloor(newLevel);
+  saveData(data);
+
+  showXPToast(`"${last.name}" removed`);
+  renderDashboard();
 }
 
 function delay(ms) {
