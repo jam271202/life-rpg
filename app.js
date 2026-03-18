@@ -635,6 +635,17 @@ function renderSettings() {
         ${!canPrestige ? `<div class="prestige-locked-msg">Reach level ${prestigeLevel} to unlock (currently level ${player.level})</div>` : ''}
       </div>
     </div>
+
+    <!-- Save Data -->
+    <div class="settings-section">
+      <div class="settings-section-title">Save Data</div>
+      <p class="settings-hint">Export your save before clearing your browser cache, then import it to restore your progress.</p>
+      <div class="save-data-row">
+        <button class="btn-save" id="btn-export-save">⬇ Export Save</button>
+        <label class="btn-save btn-import-label" for="import-save-input">⬆ Import Save</label>
+        <input type="file" id="import-save-input" accept=".json" style="display:none" />
+      </div>
+    </div>
   `;
 
   // Save name
@@ -709,6 +720,50 @@ function renderSettings() {
     saveData(d);
     showLevelUpOverlay('✦').then(() => renderSettings());
   });
+
+  // Export save
+  document.getElementById('btn-export-save').addEventListener('click', () => {
+    const json     = localStorage.getItem('rpg_life_data') || '{}';
+    const filename = `life-rpg-save-${new Date().toISOString().slice(0,10)}.json`;
+
+    // Use Web Share API on mobile if available, otherwise download
+    if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+      const file = new File([json], filename, { type: 'application/json' });
+      navigator.share({ files: [file], title: 'Life RPG Save' }).catch(() => triggerDownload(json, filename));
+    } else {
+      triggerDownload(json, filename);
+    }
+  });
+
+  // Import save
+  document.getElementById('import-save-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        // Basic sanity check
+        if (!parsed.player || !parsed.tasks) throw new Error('Invalid save file');
+        localStorage.setItem('rpg_life_data', JSON.stringify(parsed));
+        showXPToast('Save restored!');
+        setTimeout(() => switchTab('dashboard'), 800);
+      } catch {
+        alert('Could not load save — file appears invalid or corrupted.');
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function triggerDownload(json, filename) {
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ─────────────────────────────────────────
