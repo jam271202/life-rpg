@@ -2,16 +2,33 @@
 // State
 // ─────────────────────────────────────────
 let currentTab = 'dashboard';
-let lastTaskTimestamp = 0;   // ms timestamp of last logged quest, 0 = none
+let lastTaskTimestamp = 0;    // ms timestamp of last logged quest, 0 = none
 let undoTimerInterval = null; // countdown interval id
+let tavernCountdownInterval = null; // countdown interval id for tavern reset timers
+
+// Unique accent colour per NPC — used for card borders and accents
+const NPC_COLOURS = {
+  gary:   '#ef4444',
+  mei:    '#8b5cf6',
+  derek:  '#84cc16',
+  brenda: '#ec4899',
+  quill:  '#06b6d4',
+  rico:   '#f97316',
+  steel:  '#94a3b8',
+  luna:   '#a78bfa',
+};
 
 // Duration labels vary by category. Keyed by category id; falls back to 'default'.
 const DURATION_LABELS_BY_CAT = {
-  exercise:             ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈45m)', 'Long (≈1h)',   'Extended (≈2h+)'],
-  work:                 ['', 'Brief (≈30m)', 'Short (≈1h)',  'Medium (≈3h)',  'Long (≈5h)',   'Extended (≈8h+)'],
-  university:           ['', 'Brief (≈30m)', 'Short (≈1h)',  'Medium (≈3h)',  'Long (≈5h)',   'Extended (≈8h+)'],
-  personal_development: ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)', 'Long (≈2h)',   'Extended (≈3h+)'],
-  default:              ['', 'Brief',        'Short',        'Medium',        'Long',          'Extended'],
+  body_health:          ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈45m)', 'Long (≈1h)',  'Extended (≈2h+)'],
+  mind_learning:        ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  career_growth:        ['', 'Brief (≈30m)', 'Short (≈1h)',  'Medium (≈3h)',  'Long (≈5h)',  'Extended (≈8h+)'],
+  social_relationships: ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  life_admin:           ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  creative:             ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  finance:              ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  hobbies:              ['', 'Brief (≈15m)', 'Short (≈30m)', 'Medium (≈1h)',  'Long (≈2h)',  'Extended (≈3h+)'],
+  default:              ['', 'Brief',        'Short',        'Medium',        'Long',         'Extended'],
 };
 
 function getDurationLabels(categoryId) {
@@ -54,10 +71,17 @@ function switchTab(tab) {
   });
   currentTab = tab;
 
+  // Clear tavern countdown when leaving the tavern
+  if (tab !== 'tavern') {
+    clearInterval(tavernCountdownInterval);
+    tavernCountdownInterval = null;
+  }
+
   // render the newly active screen
   switch (tab) {
     case 'dashboard': renderDashboard(); break;
     case 'log':       renderLogTask();   break;
+    case 'tavern':    renderTavern();    break;
     case 'history':   renderHistory();   break;
     case 'identity':  renderIdentity();  break;
     case 'settings':  renderSettings();  break;
@@ -492,6 +516,154 @@ function setupLogForm() {
     // Go back to dashboard
     switchTab('dashboard');
   });
+}
+
+// ─────────────────────────────────────────
+// Tavern
+// ─────────────────────────────────────────
+function getMsUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return midnight - now;
+}
+
+function formatCountdown(ms) {
+  if (ms <= 0) return 'resetting…';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function renderTavern() {
+  const daily          = getDailyNPCQuests();
+  const completedCount = daily.filter(d => d.completed).length;
+  const progressPct    = Math.round((completedCount / 8) * 100);
+
+  const cardsHTML = daily.map(({ npc, quest, xpPreview, completed, xpAwarded }) => {
+    const colour = NPC_COLOURS[npc.id] || 'var(--accent)';
+
+    const footerHTML = completed
+      ? `<div class="npc-footer">
+           <span class="completed-badge">✓ Completed · ${xpAwarded} XP</span>
+           <span class="reset-countdown">Resets in ${formatCountdown(getMsUntilMidnight())}</span>
+         </div>`
+      : `<button class="btn-accept" data-npc-id="${esc(npc.id)}"
+              data-quest-title="${esc(quest.title)}"
+              data-xp-preview="${xpPreview}"
+              data-npc-avatar="${esc(npc.avatar)}"
+              data-npc-name="${esc(npc.name)}">
+           Accept &amp; Complete
+         </button>`;
+
+    return `
+      <div class="npc-card${completed ? ' npc-card--done' : ''}" style="--npc-colour:${colour}">
+        <div class="npc-card-main">
+          <div class="npc-avatar">${npc.avatar}</div>
+          <div class="npc-info">
+            <div class="npc-name">${esc(npc.name)}</div>
+            <div class="npc-tagline">${esc(npc.tagline)}</div>
+          </div>
+        </div>
+        <div class="npc-quest-section">
+          <div class="npc-quest-label">Today's Quest</div>
+          <div class="npc-quest-title">${esc(quest.title)}</div>
+          <div class="npc-quest-desc">${esc(quest.description)}</div>
+          ${!completed ? `<div class="npc-xp-reward">⚡ ${xpPreview} XP</div>` : ''}
+        </div>
+        ${footerHTML}
+      </div>`;
+  }).join('');
+
+  document.getElementById('screen-tavern').innerHTML = `
+    <div class="tavern-header">
+      <div class="tavern-title">⚔️ The <span class="header-accent">Tavern</span></div>
+      <div class="tavern-progress-row">
+        <span class="tavern-progress-count">${completedCount} / 8</span>
+        <span class="tavern-progress-label">quests complete today</span>
+      </div>
+      <div class="tavern-bar-track">
+        <div class="tavern-bar-fill" id="tavern-bar-fill" style="width:0%" data-pct="${progressPct}"></div>
+      </div>
+    </div>
+    <div class="npc-list">${cardsHTML}</div>
+  `;
+
+  // Animate progress bar
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const fill = document.getElementById('tavern-bar-fill');
+    if (fill) fill.style.width = fill.dataset.pct + '%';
+  }));
+
+  // Accept buttons
+  document.querySelectorAll('.btn-accept').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showTavernConfirm(
+        btn.dataset.npcAvatar,
+        btn.dataset.npcName,
+        btn.dataset.questTitle,
+        +btn.dataset.xpPreview,
+        async () => {
+          const result = completeNPCQuest(btn.dataset.npcId);
+          if (!result.ok) { showXPToast(result.error); return; }
+          playXPSound();
+          showXPFlyup(result.xpGained);
+          if (result.leveledUp) {
+            await delay(700);
+            await showLevelUpOverlay(result.newLevel);
+            await delay(250);
+          } else {
+            await delay(400);
+          }
+          renderTavern();
+        }
+      );
+    });
+  });
+
+  // Start the midnight countdown ticking
+  startTavernCountdowns();
+}
+
+function showTavernConfirm(avatar, npcName, questTitle, xpPreview, onConfirm) {
+  const overlay = document.getElementById('tavern-confirm');
+  document.getElementById('tavern-confirm-npc').textContent   = `${avatar} ${npcName}`;
+  document.getElementById('tavern-confirm-quest').textContent = `"${questTitle}"`;
+  document.getElementById('tavern-confirm-xp').textContent    = `⚡ +${xpPreview} XP`;
+
+  overlay.classList.add('tavern-confirm--open');
+
+  const cancel  = document.getElementById('btn-confirm-cancel');
+  const confirm = document.getElementById('btn-confirm-ok');
+
+  const close = () => {
+    overlay.classList.remove('tavern-confirm--open');
+    confirm.removeEventListener('click', handleConfirm);
+    cancel.removeEventListener('click', close);
+    overlay.removeEventListener('click', handleBackdrop);
+  };
+  const handleConfirm = () => { close(); onConfirm(); };
+  const handleBackdrop = e => { if (e.target === overlay) close(); };
+
+  confirm.addEventListener('click', handleConfirm);
+  cancel.addEventListener('click', close);
+  overlay.addEventListener('click', handleBackdrop);
+}
+
+function startTavernCountdowns() {
+  clearInterval(tavernCountdownInterval);
+  tavernCountdownInterval = setInterval(() => {
+    const ms   = getMsUntilMidnight();
+    const text = 'Resets in ' + formatCountdown(ms);
+    document.querySelectorAll('.reset-countdown').forEach(el => { el.textContent = text; });
+    if (ms <= 0) {
+      clearInterval(tavernCountdownInterval);
+      renderTavern(); // midnight — re-render with fresh quests
+    }
+  }, 1000);
 }
 
 // ─────────────────────────────────────────

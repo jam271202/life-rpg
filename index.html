@@ -13,6 +13,7 @@
     <main id="screens">
       <section id="screen-dashboard" class="screen active"></section>
       <section id="screen-log"       class="screen"></section>
+      <section id="screen-tavern"    class="screen"></section>
       <section id="screen-history"   class="screen"></section>
       <section id="screen-identity"  class="screen"></section>
       <section id="screen-settings"  class="screen"></section>
@@ -31,6 +32,12 @@
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
         </svg>
         <span class="tab-label">Log</span>
+      </button>
+      <button class="tab" data-tab="tavern">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span class="tab-label">Tavern</span>
       </button>
       <button class="tab" data-tab="history">
         <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -71,6 +78,21 @@
     </div>
   </div>
 
+  <!-- ── Tavern Confirm Modal ── -->
+  <div id="tavern-confirm" class="tavern-confirm-overlay" aria-hidden="true">
+    <div class="tavern-confirm-box">
+      <div class="tavern-confirm-npc" id="tavern-confirm-npc"></div>
+      <div class="tavern-confirm-title">Mark as complete?</div>
+      <div class="tavern-confirm-quest" id="tavern-confirm-quest"></div>
+      <div class="tavern-confirm-xp" id="tavern-confirm-xp"></div>
+      <div class="tavern-confirm-btns">
+        <button class="btn-confirm-cancel" id="btn-confirm-cancel">Cancel</button>
+        <button class="btn-confirm-ok" id="btn-confirm-ok">Complete ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="npcs.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>

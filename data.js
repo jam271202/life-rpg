@@ -22,18 +22,22 @@ const DEFAULT_DATA = {
   },
   tasks: [],
   categories: [
-    { id: 'exercise',             name: 'Exercise',             colour: '#22c55e' },
-    { id: 'work',                 name: 'Work',                 colour: '#3b82f6' },
-    { id: 'university',           name: 'University',           colour: '#a855f7' },
-    { id: 'personal_development', name: 'Personal Development', colour: '#f59e0b' },
-    { id: 'other',                name: 'Other',                colour: '#6b7280' }
+    { id: 'body_health',          name: 'Body & Health',          colour: '#22c55e' },
+    { id: 'mind_learning',        name: 'Mind & Learning',        colour: '#a855f7' },
+    { id: 'career_growth',        name: 'Career & Growth',        colour: '#f59e0b' },
+    { id: 'social_relationships', name: 'Social & Relationships', colour: '#3b82f6' },
+    { id: 'life_admin',           name: 'Life Admin',             colour: '#6b7280' },
+    { id: 'creative',             name: 'Creative',               colour: '#ec4899' },
+    { id: 'finance',              name: 'Finance & Money',        colour: '#10b981' },
+    { id: 'hobbies',              name: 'Hobbies & Leisure',      colour: '#f97316' }
   ],
   skills: [
-    { id: 'health',     name: 'Health',     icon: '❤️',  colour: '#22c55e', categories: ['exercise'] },
-    { id: 'learning',   name: 'Learning',   icon: '🧠',  colour: '#a855f7', categories: ['university', 'personal_development'] },
-    { id: 'financial',  name: 'Financial',  icon: '💰',  colour: '#f59e0b', categories: ['work'] },
-    { id: 'social',     name: 'Social',     icon: '🗣️', colour: '#3b82f6', categories: ['other'] },
-    { id: 'discipline', name: 'Discipline', icon: '⚡',  colour: '#ef4444', categories: null }
+    { id: 'health',     name: 'Health',     icon: '❤️',  colour: '#22c55e', categories: ['body_health'] },
+    { id: 'learning',   name: 'Learning',   icon: '🧠',  colour: '#a855f7', categories: ['mind_learning'] },
+    { id: 'financial',  name: 'Financial',  icon: '💰',  colour: '#10b981', categories: ['finance'] },
+    { id: 'social',     name: 'Social',     icon: '🗣️', colour: '#3b82f6', categories: ['social_relationships', 'hobbies'] },
+    { id: 'discipline', name: 'Discipline', icon: '⚡',  colour: '#ef4444', categories: ['career_growth', 'life_admin'] },
+    { id: 'expression', name: 'Expression', icon: '🎨',  colour: '#ec4899', categories: ['creative', 'hobbies'] }
   ],
   // Items available in the coin shop
   shopItems: [
@@ -50,7 +54,9 @@ const DEFAULT_DATA = {
   // Record of every in-app coin purchase
   purchases: [],
   // Last 5 logged quests for Quick Log chips
-  recentQuests: []
+  recentQuests: [],
+  // NPC daily quest completions — keyed by npcId
+  npcCompletions: {}
 };
 
 // ─── File I/O ────────────────────────────────────────────────────────────────
@@ -75,6 +81,22 @@ function loadData() {
     data.skills = JSON.parse(JSON.stringify(DEFAULT_DATA.skills));
     dirty = true;
   }
+  // Add Expression skill if missing (new skill added after initial release)
+  if (data.skills && !data.skills.find(function(s) { return s.id === 'expression'; })) {
+    data.skills.push({ id: 'expression', name: 'Expression', icon: '🎨', colour: '#ec4899', categories: ['creative', 'hobbies'] });
+    dirty = true;
+  }
+  // Sync skill category mappings to match current defaults (in case they were changed)
+  if (data.skills) {
+    var defaultSkillMap = {};
+    DEFAULT_DATA.skills.forEach(function(s) { defaultSkillMap[s.id] = s; });
+    data.skills.forEach(function(s) {
+      if (defaultSkillMap[s.id]) {
+        s.categories = defaultSkillMap[s.id].categories;
+      }
+    });
+    dirty = true;
+  }
   if (data.player.savings === undefined) {
     data.player.savings = 0;
     dirty = true;
@@ -89,6 +111,41 @@ function loadData() {
   }
   if (!data.recentQuests) {
     data.recentQuests = [];
+    dirty = true;
+  }
+  if (!data.npcCompletions) {
+    data.npcCompletions = {};
+    dirty = true;
+  }
+  // Migrate old category IDs → new category IDs
+  const CAT_MIGRATION = {
+    exercise:             'body_health',
+    work:                 'career_growth',
+    university:           'mind_learning',
+    personal_development: 'mind_learning',
+    other:                'life_admin',
+    nutrition:            'body_health',
+    wellbeing:            'body_health',
+  };
+  const newCatIds = new Set(DEFAULT_DATA.categories.map(c => c.id));
+  const hasOldCats = data.categories && data.categories.some(c => CAT_MIGRATION[c.id]);
+  if (hasOldCats) {
+    data.categories = JSON.parse(JSON.stringify(DEFAULT_DATA.categories));
+    data.tasks.forEach(function(t) {
+      if (CAT_MIGRATION[t.category]) t.category = CAT_MIGRATION[t.category];
+    });
+    if (data.recentQuests) {
+      data.recentQuests.forEach(function(q) {
+        if (CAT_MIGRATION[q.category]) q.category = CAT_MIGRATION[q.category];
+      });
+    }
+    data.skills = JSON.parse(JSON.stringify(DEFAULT_DATA.skills));
+    dirty = true;
+  }
+  // Ensure categories list is always the canonical set
+  if (!data.categories || data.categories.length !== DEFAULT_DATA.categories.length ||
+      data.categories.some(c => !newCatIds.has(c.id))) {
+    data.categories = JSON.parse(JSON.stringify(DEFAULT_DATA.categories));
     dirty = true;
   }
   if (dirty) saveData(data);
@@ -210,10 +267,12 @@ function addTask(taskObj) {
   const data      = loadData();
   const prevLevel = data.player.level;
 
-  const xp = calculateXP(
+  // npcMultiplier is an optional bonus multiplier for NPC quests (default 1.0)
+  const npcMult = taskObj.npcMultiplier || 1.0;
+  const xp = Math.round(calculateXP(
     taskObj.duration, taskObj.difficulty, taskObj.uncomfortability,
     data.player.xpMultiplier, taskObj.importance
-  );
+  ) * npcMult);
 
   const task = {
     id:               Date.now() + '-' + Math.random().toString(36).slice(2, 7),
@@ -227,6 +286,12 @@ function addTask(taskObj) {
     importance:       taskObj.importance !== undefined ? taskObj.importance : 3,
     xpAwarded:        xp
   };
+
+  // Tag NPC-sourced quests for history display
+  if (taskObj.npcId) {
+    task.npcId   = taskObj.npcId;
+    task.npcName = taskObj.npcName || taskObj.npcId;
+  }
 
   data.tasks.push(task);
   data.player.totalXP += xp;
@@ -252,4 +317,98 @@ function addTask(taskObj) {
   saveData(data);
 
   return { data: data, xpGained: xp, leveledUp: newLevel > prevLevel, newLevel: newLevel };
+}
+
+// ─── NPC Daily Quests ─────────────────────────────────────────────────────────
+
+// Deterministic hash of a string → non-negative integer.
+// Same input always produces the same output across all players and sessions.
+function _dateHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h, 31) + str.charCodeAt(i) | 0;
+  }
+  return Math.abs(h);
+}
+
+// Returns the quest assigned to a given NPC today (deterministic — same for all players).
+function getTodaysNPCQuest(npc) {
+  const today = new Date().toISOString().slice(0, 10);
+  const idx   = _dateHash(today + '|' + npc.id) % npc.quests.length;
+  return npc.quests[idx];
+}
+
+// Returns today's quest + completion status for every NPC.
+// Shape: [{ npc, quest, xpPreview, completed, completedAt, xpAwarded }, ...]
+function getDailyNPCQuests() {
+  const data  = loadData();
+  const today = new Date().toISOString().slice(0, 10);
+
+  return NPCS.map(function(npc) {
+    const quest      = getTodaysNPCQuest(npc);
+    const rec        = data.npcCompletions[npc.id];
+    const completed  = !!(rec && rec.date === today);
+    const xpPreview  = Math.round(
+      calculateXP(quest.duration, quest.difficulty, quest.uncomfortability,
+                  data.player.xpMultiplier, 3) * npc.xpMultiplier
+    );
+    return {
+      npc,
+      quest,
+      xpPreview,
+      completed,
+      completedAt: completed ? rec.completedAt : null,
+      xpAwarded:   completed ? rec.xpAwarded   : null,
+    };
+  });
+}
+
+// Completes today's NPC quest for the given npcId.
+// Awards XP (logged as a regular task tagged with npcId), marks the slot done.
+// Returns { ok, xpGained, leveledUp, newLevel, error }
+function completeNPCQuest(npcId) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // NPCS is defined in npcs.js, loaded before data.js in index.html
+  if (typeof NPCS === 'undefined') return { ok: false, error: 'npcs.js not loaded' };
+  const npc = NPCS.find(function(n) { return n.id === npcId; });
+  if (!npc) return { ok: false, error: 'NPC not found: ' + npcId };
+
+  // Check not already completed today
+  const data = loadData();
+  const rec  = data.npcCompletions[npcId];
+  if (rec && rec.date === today) {
+    return { ok: false, error: 'Already completed today', completedAt: rec.completedAt };
+  }
+
+  const quest  = getTodaysNPCQuest(npc);
+  const result = addTask({
+    name:             quest.title,
+    category:         quest.category,
+    duration:         quest.duration,
+    difficulty:       quest.difficulty,
+    uncomfortability: quest.uncomfortability,
+    importance:       3,
+    npcMultiplier:    npc.xpMultiplier,
+    npcId:            npc.id,
+    npcName:          npc.name,
+  });
+
+  // Reload after addTask saved, then record completion
+  const d = loadData();
+  d.npcCompletions[npcId] = {
+    date:        today,
+    questId:     quest.id,
+    questTitle:  quest.title,
+    completedAt: new Date().toISOString(),
+    xpAwarded:   result.xpGained,
+  };
+  saveData(d);
+
+  return {
+    ok:        true,
+    xpGained:  result.xpGained,
+    leveledUp: result.leveledUp,
+    newLevel:  result.newLevel,
+  };
 }
