@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Life RPG</title>
+  <!-- Favicon & Apple Home Screen Icon -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon-apple.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Life RPG" />
+  <meta name="theme-color" content="#1a1a2e" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -91,6 +98,25 @@
       </div>
     </div>
   </div>
+
+  <!-- Generate apple-touch-icon PNG from SVG at runtime -->
+  <script>
+  (function(){
+    var img = new Image();
+    img.onload = function(){
+      var c = document.createElement('canvas');
+      c.width = 180; c.height = 180;
+      var ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, 180, 180);
+      c.toBlob(function(blob){
+        var url = URL.createObjectURL(blob);
+        var link = document.querySelector('link[rel="apple-touch-icon"]');
+        if(link) link.href = url;
+      }, 'image/png');
+    };
+    img.src = 'icon.svg';
+  })();
+  </script>
 
   <script src="npcs.js"></script>
   <script src="data.js"></script>

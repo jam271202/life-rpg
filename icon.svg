@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d6a4f"/>
+      <stop offset="100%" stop-color="#1b4332"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdd7aa"/>
+      <stop offset="100%" stop-color="#f0c088"/>
+    </linearGradient>
+    <linearGradient id="tunic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a7d44"/>
+      <stop offset="100%" stop-color="#245c2b"/>
+    </linearGradient>
+    <linearGradient id="belt-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5e3c"/>
+      <stop offset="100%" stop-color="#6b3e26"/>
+    </linearGradient>
+    <linearGradient id="sword-blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8e8e8"/>
+      <stop offset="100%" stop-color="#b0b0b0"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#daa520"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- Decorative shield behind character -->
+  <path d="M256 80 L340 130 L340 240 L256 300 L172 240 L172 130 Z" fill="none" stroke="#ffd700" stroke-width="3" opacity="0.2"/>
+
+  <!-- Sword (behind body) -->
+  <g transform="translate(330, 160) rotate(25)">
+    <!-- Blade -->
+    <rect x="-6" y="-100" width="12" height="100" rx="2" fill="url(#sword-blade)"/>
+    <polygon points="-6,-100 6,-100 0,-118" fill="#d0d0d0"/>
+    <!-- Guard -->
+    <rect x="-18" y="-4" width="36" height="8" rx="3" fill="url(#gold)"/>
+    <!-- Grip -->
+    <rect x="-5" y="4" width="10" height="28" rx="2" fill="#6b3e26"/>
+    <!-- Pommel -->
+    <circle cx="0" cy="36" r="7" fill="url(#gold)"/>
+  </g>
+
+  <!-- Body / Tunic -->
+  <path d="M210 280 Q210 260 230 250 L282 250 Q302 260 302 280 L310 380 L202 380 Z" fill="url(#tunic)"/>
+  <!-- Tunic neckline -->
+  <path d="M235 252 Q256 270 277 252" fill="none" stroke="#1b4332" stroke-width="2"/>
+
+  <!-- Belt -->
+  <rect x="208" y="320" width="96" height="16" rx="3" fill="url(#belt-g)"/>
+  <!-- Belt buckle -->
+  <rect x="245" y="322" width="22" height="12" rx="2" fill="url(#gold)"/>
+
+  <!-- Arms -->
+  <path d="M210 270 Q180 300 175 340 Q172 355 185 355 Q195 355 200 340 L215 300" fill="url(#tunic)" stroke="#1b4332" stroke-width="1"/>
+  <path d="M302 270 Q332 300 337 340 Q340 355 327 355 Q317 355 312 340 L297 300" fill="url(#tunic)" stroke="#1b4332" stroke-width="1"/>
+
+  <!-- Hands -->
+  <circle cx="180" cy="350" r="12" fill="url(#skin)"/>
+  <circle cx="332" cy="350" r="12" fill="url(#skin)"/>
+
+  <!-- Legs -->
+  <rect x="218" y="378" width="30" height="52" rx="4" fill="#5c4033"/>
+  <rect x="264" y="378" width="30" height="52" rx="4" fill="#5c4033"/>
+  <!-- Boots -->
+  <path d="M214 420 L214 438 Q214 445 222 445 L252 445 Q256 445 256 438 L256 420" fill="#3e2723" rx="4"/>
+  <path d="M260 420 L260 438 Q260 445 268 445 L298 445 Q302 445 302 438 L302 420" fill="#3e2723" rx="4"/>
+
+  <!-- Head -->
+  <ellipse cx="256" cy="210" rx="46" ry="50" fill="url(#skin)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="240" cy="208" rx="7" ry="8" fill="white"/>
+  <ellipse cx="272" cy="208" rx="7" ry="8" fill="white"/>
+  <circle cx="242" cy="209" r="4" fill="#2c1810"/>
+  <circle cx="274" cy="209" r="4" fill="#2c1810"/>
+  <!-- Eye shine -->
+  <circle cx="244" cy="207" r="1.5" fill="white"/>
+  <circle cx="276" cy="207" r="1.5" fill="white"/>
+
+  <!-- Eyebrows -->
+  <path d="M230 196 Q240 190 250 195" fill="none" stroke="#5c3a1e" stroke-width="3" stroke-linecap="round"/>
+  <path d="M262 195 Q272 190 282 196" fill="none" stroke="#5c3a1e" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Mouth (confident smile) -->
+  <path d="M244 228 Q256 238 268 228" fill="none" stroke="#a0522d" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M256 212 Q252 222 256 224 Q260 222 256 212" fill="#e8b87a"/>
+
+  <!-- Ears -->
+  <ellipse cx="210" cy="212" rx="8" ry="12" fill="url(#skin)"/>
+  <ellipse cx="302" cy="212" rx="8" ry="12" fill="url(#skin)"/>
+
+  <!-- Hair -->
+  <path d="M212 195 Q212 165 240 155 Q256 150 272 155 Q300 165 300 195 Q300 175 285 168 Q260 158 240 168 Q220 175 212 195" fill="#5c3a1e"/>
+
+  <!-- Hat -->
+  <path d="M195 190 Q200 140 256 125 Q312 140 317 190 L195 190 Z" fill="url(#hat)"/>
+  <!-- Hat brim -->
+  <ellipse cx="256" cy="190" rx="75" ry="14" fill="#2d6a4f"/>
+  <!-- Hat band -->
+  <rect x="210" y="175" width="92" height="8" rx="2" fill="url(#belt-g)"/>
+  <!-- Feather -->
+  <path d="M300 165 Q320 130 310 100 Q305 115 295 125 Q310 120 300 165" fill="#dc2626" opacity="0.9"/>
+  <path d="M302 160 Q315 135 308 110" fill="none" stroke="#b91c1c" stroke-width="1"/>
+
+  <!-- Shield (in left hand) -->
+  <g transform="translate(160, 310)">
+    <path d="M0 -30 L25 -20 L25 15 L0 35 L-25 15 L-25 -20 Z" fill="#1b4332" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M0 -18 L12 -12 L12 8 L0 20 L-12 8 L-12 -12 Z" fill="url(#gold)" opacity="0.4"/>
+    <!-- Star emblem on shield -->
+    <polygon points="0,-10 3,-3 10,-3 4,2 6,10 0,5 -6,10 -4,2 -10,-3 -3,-3" fill="url(#gold)" opacity="0.8"/>
+  </g>
+
+  <!-- XP sparkle effects -->
+  <g opacity="0.7">
+    <polygon points="380,100 383,108 392,108 385,113 388,122 380,117 372,122 375,113 368,108 377,108" fill="#ffd700"/>
+    <polygon points="140,120 142,126 148,126 143,130 145,136 140,132 135,136 137,130 132,126 138,126" fill="#ffd700" opacity="0.5"/>
+    <polygon points="400,200 402,205 407,205 403,208 405,213 400,210 395,213 397,208 393,205 398,205" fill="#ffd700" opacity="0.6"/>
+  </g>
+</svg>
